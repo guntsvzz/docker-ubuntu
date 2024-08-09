@@ -14,29 +14,35 @@ ENV PUID ${PUID:-1000}
 ARG PGID
 ENV PGID ${PGID:-1000}
 ENV HOME /home/${USER}
-ARG LANG
-ENV LANG ${LANG:-en_GB}
-ARG TZ
-ENV TZ ${TZ:-Europe/London}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /root
+# set work directory
+WORKDIR /src/app
+
+# Timezone
+ENV TZ="Asia/Bangkok"
+RUN apt clean 
+RUN apt update && apt upgrade -y
+# Set timezone
+RUN apt install -y tzdata
+RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
+
+# Set locales
+# https://leimao.github.io/blog/Docker-Locale/
+RUN apt-get install -y locales
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+ENV LC_ALL en_US.UTF-8 
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
 
 # Update system and install packages
-RUN apt update \
-  && apt upgrade -y \
-  && apt install -y \
+RUN apt update && apt upgrade -y 
+RUN apt install -y \
     ca-certificates dnsutils iproute2 iputils-ping locales lsb-release net-tools sudo tzdata \
     curl git gnupg htop screen unzip vim wget zsh
     # exiftool ffmpeg sqlite3
-
-# Configure timezone and localisation
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
-  && echo $TZ > /etc/timezone \
-  && echo $LANG.UTF-8 UTF-8 > /etc/locale.gen \
-  && locale-gen $LANG.UTF-8 \
-  && update-locale LANG=$LANG.UTF-8
 
 # Setup user and home directory
 RUN useradd -u ${PUID} -U -d ${HOME} -s /bin/zsh ${USER} \
@@ -52,6 +58,9 @@ RUN chown -R ${PUID}:${PGID} $HOME
 
 # Install Starship shell prompt
 RUN curl -fsSL https://starship.rs/install.sh | sh -s -- -y
+
+# Install nodejs
+# RUN curl -sL https://deb.nodesource.com/setup_21.x -o nodesource_setup.sh
 
 # Install NPM and Node
 FROM ubuntu-base as ubuntu-node
@@ -76,6 +85,21 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
   && unzip -o deno.zip \
   && rm -f deno.zip \
   && mv deno /usr/local/bin
+
+RUN apt update && apt upgrade -y
+
+# install dependencies
+# RUN pip install --upgrade pip
+
+RUN apt update
+RUN apt-get install -y \
+  apache2 \
+  git \ 
+  python3-pip \ 
+  postgresql \
+  postgresql-contrib \
+  yarn \
+  nodejs
 
 # Install Bun
 FROM ubuntu-deno as ubuntu-bun
