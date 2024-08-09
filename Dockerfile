@@ -37,11 +37,23 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8  
 ENV LANGUAGE en_US:en  
 
+
 # Update system and install packages
 RUN apt update && apt upgrade -y 
+
+RUN apt update
+RUN apt-get install -y \
+  apache2 \
+  git \ 
+  python3-pip \ 
+  postgresql postgresql-contrib \
+  yarn \
+  nodejs 
+
 RUN apt install -y \
-    ca-certificates dnsutils iproute2 iputils-ping locales lsb-release net-tools sudo tzdata \
-    curl git gnupg htop screen unzip vim wget zsh
+    # ca-certificates dnsutils iproute2 iputils-ping locales lsb-release net-tools \
+    sudo vim wget zsh tzdata curl git unzip 
+    # gnupg htop screen 
     # exiftool ffmpeg sqlite3
 
 # Setup user and home directory
@@ -86,26 +98,10 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
   && rm -f deno.zip \
   && mv deno /usr/local/bin
 
-RUN apt update && apt upgrade -y
-
-# install dependencies
-# RUN pip install --upgrade pip
-
-RUN apt update
-RUN apt-get install -y \
-  apache2 \
-  git \ 
-  python3-pip \ 
-  postgresql \
-  postgresql-contrib \
-  yarn \
-  nodejs
-
 # Install Bun
 FROM ubuntu-deno as ubuntu-bun
-
 # Ready default user
-WORKDIR ${HOME}
+# WORKDIR ${HOME}
 USER ${USER}
 
 RUN curl -fsSL https://bun.sh/install | bash
