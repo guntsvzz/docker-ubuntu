@@ -56,6 +56,9 @@ RUN apt install -y \
     # gnupg htop screen 
     # exiftool ffmpeg sqlite3
 
+RUN apt install -y \
+  libssl-dev libreadline-dev zlib1g-dev autoconf bison build-essential libyaml-dev libreadline-dev libncurses5-dev libffi-dev libgdbm-dev
+
 # Setup user and home directory
 RUN useradd -u ${PUID} -U -d ${HOME} -s /bin/zsh ${USER} \
   && groupmod -o -g ${PUID} ${USER} \
